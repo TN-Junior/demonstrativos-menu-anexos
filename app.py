@@ -4,6 +4,7 @@ import requests
 import json
 import time
 import os
+
 app = Flask(__name__)
 
 # Carrega o DataFrame dos municípios
@@ -198,36 +199,39 @@ def rgf():
 
         # Lógica de extração
         for ano in anos:
-            for municipio in municipios:  # Itera apenas nos municípios selecionados
+            for municipio in municipios:
+                # Obtem o nome do município
                 nome_municipio = df_municipios.loc[df_municipios["cod. Munic 7D"] == municipio, "NOME DO MUNICÍPIO"].values[0]
                 
                 for periodo in periodos:
                     for anexo in anexos:
-                        url = (f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rgf?"
-                               f"an_exercicio={ano}&in_periodicidade=Q&nr_periodo={periodo}"
-                               f"&co_tipo_demonstrativo=RGF&no_anexo={anexo}"
-                               f"&co_esfera=M&co_poder=E&id_ente={municipio}")
-                        
-                        print(f"Consultando URL para {nome_municipio} ({municipio}) - Anexo: {anexo} - {url}")
-                        
-                        try:
-                            # Pausa para evitar sobrecarregar o servidor
-                            time.sleep(3)
+                        for poder in ["E", "L"]:  # Itera sobre os poderes E e L
+                            url = (f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rgf?"
+                                   f"an_exercicio={ano}&in_periodicidade=Q&nr_periodo={periodo}"
+                                   f"&co_tipo_demonstrativo=RGF&no_anexo={anexo}"
+                                   f"&co_esfera=M&co_poder={poder}&id_ente={municipio}")
                             
-                            # Faz a requisição
-                            response = requests.get(url, verify=False)
-                            response.raise_for_status()
+                            print(f"Consultando URL para {nome_municipio} ({municipio}) - Poder: {poder} - Anexo: {anexo} - {url}")
                             
-                            # Estrutura os dados em JSON
-                            data = response.json()
-                            
-                            # Verifica se há dados
-                            if "items" in data and data["items"]:
-                                result = pd.DataFrame(data["items"])
-                                lista_tabs.append(result)
-                        except Exception as e:
-                            print(f"Erro ao consultar {url}: {e}")
-                            continue
+                            try:
+                                # Pausa para evitar sobrecarregar o servidor
+                                time.sleep(3)
+                                
+                                # Faz a requisição
+                                response = requests.get(url, verify=False)
+                                response.raise_for_status()
+                                
+                                # Estrutura os dados em JSON
+                                data = response.json()
+                                
+                                # Verifica se há dados
+                                if "items" in data and data["items"]:
+                                    result = pd.DataFrame(data["items"])
+                                    result["co_poder"] = poder  # Adiciona a coluna do poder
+                                    lista_tabs.append(result)
+                            except Exception as e:
+                                print(f"Erro ao consultar {url}: {e}")
+                                continue
 
         # Concatena todos os DataFrames
         if lista_tabs:
@@ -244,8 +248,9 @@ def rgf():
         "rgf.html", 
         anos=list(range(2015, 2026)), 
         periodos=[1, 2, 3, 4], 
-        anexos=["RGF-Anexo%2001", "RGF-Anexo%2002", "RGF-Anexo%2003", "RGF-Anexo%2004", "RGF-Anexo%2005", "RGF-Anexo%2006" ],
-        municipios=df_municipios[["cod. Munic 7D", "NOME DO MUNICÍPIO"]].to_dict(orient="records")  # Passa os municípios para o template
+        anexos=["RGF-Anexo%2001", "RGF-Anexo%2002", "RGF-Anexo%2003", "RGF-Anexo%2004", "RGF-Anexo%2005", "RGF-Anexo%2006"],
+        municipios=df_municipios[["cod. Munic 7D", "NOME DO MUNICÍPIO"]].to_dict(orient="records"),  # Passa os municípios para o template
+        poderes=["E", "L"]  # Lista de poderes disponíveis
     )
 
 if __name__ == "__main__":
