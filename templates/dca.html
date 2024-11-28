@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extração de DCA</title>
+</head>
+<body>
+    <h1>Extração de DCA</h1>
+    <form method="POST">
+        <h3>Selecione os Anos:</h3>
+        {% for ano in anos %}
+            <label><input type="checkbox" name="anos" value="{{ ano }}"> {{ ano }}</label><br>
+        {% endfor %}
+        
+        <h3>Selecione os Entes:</h3>
+        {% for ente in entes %}
+            <label><input type="checkbox" name="entes" value="{{ ente }}"> {{ ente }}</label><br>
+        {% endfor %}
+        
+        <h3>Selecione os Anexos:</h3>
+        {% for anexo in anexos %}
+            <label><input type="checkbox" name="anexos" value="{{ anexo }}"> {{ anexo }}</label><br>
+        {% endfor %}
+        
+        <button type="submit">Extrair Dados</button>
+    </form>
+</body>
+</html>
+
+{% endblock %}

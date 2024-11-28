@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extração de RGF</title>
+</head>
+<body>
+    <h1>Extração de RGF</h1>
+    <form method="POST">
+        <h3>Selecione os Anos:</h3>
+        <label><input type="checkbox" name="anos" value="2015"> 2015</label><br>
+        <label><input type="checkbox" name="anos" value="2016"> 2016</label><br>
+        <label><input type="checkbox" name="anos" value="2017"> 2017</label><br>
+        <label><input type="checkbox" name="anos" value="2018"> 2018</label><br>
+        <label><input type="checkbox" name="anos" value="2019"> 2019</label><br>
+        <label><input type="checkbox" name="anos" value="2020"> 2020</label><br>
+        <label><input type="checkbox" name="anos" value="2021"> 2021</label><br>
+        <label><input type="checkbox" name="anos" value="2022"> 2022</label><br>
+        <label><input type="checkbox" name="anos" value="2023"> 2023</label><br>
+
+        <h3>Selecione os Períodos:</h3>
+        <label><input type="checkbox" name="periodos" value="1"> 1</label><br>
+        <label><input type="checkbox" name="periodos" value="2"> 2</label><br>
+        <label><input type="checkbox" name="periodos" value="3"> 3</label><br>
+        <label><input type="checkbox" name="periodos" value="4"> 4</label><br>
+
+        <h3>Selecione os Anexos:</h3>
+        <label><input type="checkbox" name="anexos" value="RGF-Anexo%2002"> RGF-Anexo 02</label><br>
+        <label><input type="checkbox" name="anexos" value="RGF-Anexo%2005"> RGF-Anexo 05</label><br>
+
+        <button type="submit">Extrair Dados</button>
+    </form>
+</body>
+</html>
+
+{% endblock %}
