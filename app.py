@@ -28,7 +28,7 @@ anexos_rreo = [
 # Rota principal - Menu
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("base.html")
 
 # Rotas para as páginas específicas
 @app.route("/dca", methods=["GET", "POST"])
