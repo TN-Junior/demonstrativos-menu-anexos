@@ -241,7 +241,7 @@ def rgf():
     # Exibe a página para seleção dos parâmetros
     return render_template(
         "rgf.html", 
-        anos=list(range(2015, 2024)), 
+        anos=list(range(2015, 2025)), 
         periodos=[1, 2, 3, 4], 
         anexos=["RGF-Anexo%2002", "RGF-Anexo%2005"]
     )
