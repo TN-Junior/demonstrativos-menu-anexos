@@ -1,33 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extração de RGF</title>
-</head>
-<body>
-    <h1>Extração de RGF</h1>
-    <form method="POST">
-        <h3>Selecione os Anos:</h3>
-        {% for ano in anos %}
-            <label><input type="checkbox" name="anos" value="{{ ano }}"> {{ ano }}</label><br>
-        {% endfor %}
+<form method="POST">
+  <h3>Selecione os Anos:</h3>
+  {% for ano in anos %}
+      <label><input type="checkbox" name="anos" value="{{ ano }}"> {{ ano }}</label><br>
+  {% endfor %}
 
-        <h3>Selecione os Períodos:</h3>
-        {% for periodo in periodos %}
-            <label><input type="checkbox" name="periodos" value="{{ periodo }}"> {{ periodo }}</label><br>
-        {% endfor %}
+  <h3>Selecione os Períodos:</h3>
+  {% for periodo in periodos %}
+      <label><input type="checkbox" name="periodos" value="{{ periodo }}"> {{ periodo }}</label><br>
+  {% endfor %}
 
-        <h3>Selecione os Anexos:</h3>
-        {% for anexo in anexos %}
-            <label><input type="checkbox" name="anexos" value="{{ anexo }}"> {{ anexo }}</label><br>
-        {% endfor %}
+  <h3>Selecione os Anexos:</h3>
+  {% for anexo in anexos %}
+      <label><input type="checkbox" name="anexos" value="{{ anexo }}"> {{ anexo }}</label><br>
+  {% endfor %}
 
-        <button type="submit">Extrair Dados</button>
-    </form>
-</body>
-</html>
+  <h3>Selecione os Municípios:</h3>
+  {% for municipio in municipios %}
+      <label>
+          <input type="checkbox" name="municipios" value="{{ municipio['cod. Munic 7D'] }}"> {{ municipio['NOME DO MUNICÍPIO'] }}
+      </label><br>
+  {% endfor %}
+
+  <button type="submit">Extrair Dados</button>
+</form>
+
 {% endblock %}

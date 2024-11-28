@@ -182,32 +182,33 @@ def rgf():
         anos = request.form.getlist("anos")
         periodos = request.form.getlist("periodos")
         anexos = request.form.getlist("anexos")
+        municipios = request.form.getlist("municipios")  # Captura os municípios selecionados
 
         # Verifica se parâmetros foram selecionados
-        if not anos or not periodos or not anexos:
-            return "Por favor, selecione pelo menos um ano, período e anexo.", 400
+        if not anos or not periodos or not anexos or not municipios:
+            return "Por favor, selecione pelo menos um ano, período, anexo e município.", 400
 
         # Converte anos e períodos para inteiros
         anos = list(map(int, anos))
         periodos = list(map(int, periodos))
-        
+        municipios = list(map(int, municipios))  # Converte os códigos dos municípios para inteiros
+
         # Lista para armazenar os DataFrames de resultados
         lista_tabs = []
 
         # Lógica de extração
         for ano in anos:
-            for index, row in df_municipios.iterrows():
-                ente = int(row["cod. Munic 7D"])
-                nome_municipio = row["NOME DO MUNICÍPIO"]
+            for municipio in municipios:  # Itera apenas nos municípios selecionados
+                nome_municipio = df_municipios.loc[df_municipios["cod. Munic 7D"] == municipio, "NOME DO MUNICÍPIO"].values[0]
                 
                 for periodo in periodos:
                     for anexo in anexos:
                         url = (f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rgf?"
                                f"an_exercicio={ano}&in_periodicidade=Q&nr_periodo={periodo}"
                                f"&co_tipo_demonstrativo=RGF&no_anexo={anexo}"
-                               f"&co_esfera=M&co_poder=E&id_ente={ente}")
+                               f"&co_esfera=M&co_poder=E&id_ente={municipio}")
                         
-                        print(f"Consultando URL para {nome_municipio} ({ente}) - Anexo: {anexo} - {url}")
+                        print(f"Consultando URL para {nome_municipio} ({municipio}) - Anexo: {anexo} - {url}")
                         
                         try:
                             # Pausa para evitar sobrecarregar o servidor
@@ -243,7 +244,8 @@ def rgf():
         "rgf.html", 
         anos=list(range(2015, 2026)), 
         periodos=[1, 2, 3, 4], 
-        anexos=["RGF-Anexo%2001", "RGF-Anexo%2002", "RGF-Anexo%2003", "RGF-Anexo%2004", "RGF-Anexo%2005", "RGF-Anexo%2006" ]
+        anexos=["RGF-Anexo%2001", "RGF-Anexo%2002", "RGF-Anexo%2003", "RGF-Anexo%2004", "RGF-Anexo%2005", "RGF-Anexo%2006" ],
+        municipios=df_municipios[["cod. Munic 7D", "NOME DO MUNICÍPIO"]].to_dict(orient="records")  # Passa os municípios para o template
     )
 
 if __name__ == "__main__":
