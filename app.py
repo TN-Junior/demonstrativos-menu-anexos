@@ -140,7 +140,7 @@ def rreo():
         else:
             return "Nenhum dado encontrado para os parâmetros selecionados.", 400
 
-    return render_template("rreo.html", anos=list(range(2020, 2025)), periodos=list(range(1, 7)), anexos=anexos_rreo)
+    return render_template("rreo.html", anos=list(range(2015, 2025)), periodos=list(range(1, 7)), anexos=anexos_rreo)
 
 
 @app.route("/rgf", methods=["GET", "POST"])
