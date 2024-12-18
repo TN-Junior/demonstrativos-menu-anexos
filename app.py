@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, send_file
 import pandas as pd
 import requests
-import time
 import urllib3
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 # Desabilita avisos de HTTPS não verificado
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -45,10 +45,20 @@ anexos_rgf = [
 
 entes = df_municipios["cod. Munic 7D"].astype('int').to_list()
 
+# Função para realizar a requisição
+
+def fetch_data(url):
+    try:
+        response = requests.get(url, verify=False)
+        response.raise_for_status()
+        return response.json().get("items", [])
+    except Exception as e:
+        print(f"Erro ao consultar {url}: {e}")
+        return []
+
 @app.route("/")
 def index():
     return render_template("base.html")
-
 
 @app.route("/dca", methods=["GET", "POST"])
 def dca():
@@ -62,28 +72,22 @@ def dca():
 
         anos = list(map(int, anos))
         entes_a_extrair = list(map(int, entes_a_extrair))
-        lista_tabs = []
+        urls = []
 
         for ano in anos:
             for ente in entes_a_extrair:
                 for anexo in anexos_a_extrair:
-                    url = f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/dca?an_exercicio={ano}&no_anexo={anexo}&id_ente={ente}"
-                    print(f"Consultando URL (dca): {url}")
-                    try:
-                        time.sleep(3)
-                        response = requests.get(url, verify=False)
-                        response.raise_for_status()
-                        base = response.json()
-                        info = base.get('items', [])
-                        if info:
-                            result = pd.DataFrame(info)
-                            lista_tabs.append(result)
-                    except Exception as e:
-                        print(f"Erro ao consultar {url}: {e}")
-                        continue
+                    urls.append(
+                        f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/dca?"
+                        f"an_exercicio={ano}&no_anexo={anexo}&id_ente={ente}"
+                    )
 
-        if lista_tabs:
-            dataframes = pd.concat(lista_tabs)
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_data, url) for url in urls]
+            results = [future.result() for future in futures]
+
+        if results:
+            dataframes = pd.concat([pd.DataFrame(result) for result in results if result])
             output_file = "dados_anexos_DCA.csv"
             dataframes.to_csv(output_file, sep=";", index=False, decimal=",")
             return send_file(output_file, as_attachment=True)
@@ -92,48 +96,38 @@ def dca():
 
     return render_template("dca.html", anos=list(range(2015, 2024)), entes=entes, anexos=anexos_dca)
 
-
 @app.route("/rreo", methods=["GET", "POST"])
 def rreo():
     if request.method == "POST":
         anos = request.form.getlist("anos")
         periodos = request.form.getlist("periodos")
         anexos_a_extrair = request.form.getlist("anexos")
+        municipios_selecionados = request.form.getlist("municipios")
 
-        if not anos or not periodos or not anexos_a_extrair:
-            return "Por favor, selecione pelo menos um ano, período e anexo.", 400
+        if not anos or not periodos or not anexos_a_extrair or not municipios_selecionados:
+            return "Por favor, selecione pelo menos um ano, período, anexo e município.", 400
 
         anos = list(map(int, anos))
         periodos = list(map(int, periodos))
-        lista_tabs = []
+        municipios_selecionados = list(map(int, municipios_selecionados))
+        urls = []
 
         for ano in anos:
             for periodo in periodos:
-                for index, row in df_municipios.iterrows():
-                    ente = int(row["cod. Munic 7D"])
-                    nome_municipio = row["NOME DO MUNICÍPIO"]
-
+                for municipio in municipios_selecionados:
                     for anexo in anexos_a_extrair:
-                        url = (f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rreo?"
-                               f"an_exercicio={ano}&nr_periodo={periodo}"
-                               f"&co_tipo_demonstrativo=RREO&no_anexo={anexo}&co_esfera=M&id_ente={ente}")
-                        print(f"Consultando URL (RREO) para {nome_municipio} ({ente}) - Ano {ano}, Período {periodo}: {url}")
+                        urls.append(
+                            f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rreo?"
+                            f"an_exercicio={ano}&nr_periodo={periodo}&co_tipo_demonstrativo=RREO"
+                            f"&no_anexo={anexo}&co_esfera=M&id_ente={municipio}"
+                        )
 
-                        try:
-                            time.sleep(3)
-                            response = requests.get(url, verify=False)
-                            response.raise_for_status()
-                            base = response.json()
-                            info = base.get('items', [])
-                            if info:
-                                result = pd.DataFrame(info)
-                                lista_tabs.append(result)
-                        except Exception as e:
-                            print(f"Erro ao consultar {url}: {e}")
-                            continue
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_data, url) for url in urls]
+            results = [future.result() for future in futures]
 
-        if lista_tabs:
-            dataframes = pd.concat(lista_tabs)
+        if results:
+            dataframes = pd.concat([pd.DataFrame(result) for result in results if result])
             output_file = "dados_anexos_RREO.csv"
             dataframes.to_csv(output_file, sep=";", index=False, decimal=",")
             return send_file(output_file, as_attachment=True)
@@ -141,8 +135,6 @@ def rreo():
             return "Nenhum dado encontrado para os parâmetros selecionados.", 400
 
     return render_template("rreo.html", anos=list(range(2015, 2025)), periodos=list(range(1, 7)), anexos=anexos_rreo, municipios=df_municipios[["cod. Munic 7D", "NOME DO MUNICÍPIO"]].to_dict(orient="records"))
-
-
 
 @app.route("/rgf", methods=["GET", "POST"])
 def rgf():
@@ -158,35 +150,26 @@ def rgf():
         anos = list(map(int, anos))
         periodos = list(map(int, periodos))
         municipios = list(map(int, municipios))
-        lista_tabs = []
+        urls = []
 
         for ano in anos:
             for municipio in municipios:
-                nome_municipio = df_municipios.loc[df_municipios["cod. Munic 7D"] == municipio, "NOME DO MUNICÍPIO"].values[0]
                 for periodo in periodos:
                     for anexo in anexos:
                         for poder in ["E", "L"]:
-                            url = (f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rgf?"
-                                   f"an_exercicio={ano}&in_periodicidade=Q&nr_periodo={periodo}"
-                                   f"&co_tipo_demonstrativo=RGF&no_anexo={anexo}"
-                                   f"&co_esfera=M&co_poder={poder}&id_ente={municipio}")
-                            print(f"Consultando URL para {nome_municipio} ({municipio}) - Poder: {poder} - Anexo: {anexo} - {url}")
+                            urls.append(
+                                f"https://apidatalake.tesouro.gov.br/ords/siconfi/tt/rgf?"
+                                f"an_exercicio={ano}&in_periodicidade=Q&nr_periodo={periodo}"
+                                f"&co_tipo_demonstrativo=RGF&no_anexo={anexo}"
+                                f"&co_esfera=M&co_poder={poder}&id_ente={municipio}"
+                            )
 
-                            try:
-                                time.sleep(3)
-                                response = requests.get(url, verify=False)
-                                response.raise_for_status()
-                                data = response.json()
-                                if "items" in data and data["items"]:
-                                    result = pd.DataFrame(data["items"])
-                                    result["co_poder"] = poder
-                                    lista_tabs.append(result)
-                            except Exception as e:
-                                print(f"Erro ao consultar {url}: {e}")
-                                continue
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_data, url) for url in urls]
+            results = [future.result() for future in futures]
 
-        if lista_tabs:
-            dataframes = pd.concat(lista_tabs)
+        if results:
+            dataframes = pd.concat([pd.DataFrame(result) for result in results if result])
             output_file = "dados_anexos_RGF.csv"
             dataframes.to_csv(output_file, sep=";", index=False, decimal=",")
             return send_file(output_file, as_attachment=True)
@@ -194,7 +177,6 @@ def rgf():
             return "Nenhum dado encontrado para os parâmetros selecionados.", 400
 
     return render_template("rgf.html", anos=list(range(2015, 2026)), periodos=[1, 2, 3, 4], anexos=anexos_rgf, municipios=df_municipios[["cod. Munic 7D", "NOME DO MUNICÍPIO"]].to_dict(orient="records"))
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)

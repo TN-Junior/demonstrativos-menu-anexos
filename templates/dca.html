@@ -1,34 +1,62 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extração de DCA</title>
-</head>
-<body>
-    <h1>Extração de DCA</h1>
-    <form method="POST">
-        <h3>Selecione os Anos:</h3>
-        {% for ano in anos %}
-            <label><input type="checkbox" name="anos" value="{{ ano }}"> {{ ano }}</label><br>
-        {% endfor %}
-        
-        <h3>Selecione os Entes:</h3>
-        {% for ente in entes %}
-            <label><input type="checkbox" name="entes" value="{{ ente }}"> {{ ente }}</label><br>
-        {% endfor %}
-        
-        <h3>Selecione os Anexos:</h3>
-        {% for anexo in anexos %}
-            <label><input type="checkbox" name="anexos" value="{{ anexo }}"> {{ anexo }}</label><br>
-        {% endfor %}
-        
-        <button type="submit">Extrair Dados</button>
-    </form>
-</body>
-</html>
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5>Extração de DCA</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <!-- Botão para Anos -->
+                <div class="mb-3">
+                    <button class="btn btn-outline-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnos">
+                        Selecione os Anos
+                    </button>
+                    <div id="collapseAnos" class="collapse mt-2">
+                        {% for ano in anos %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="anos" value="{{ ano }}">
+                                <label class="form-check-label">{{ ano }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
 
+                <!-- Botão para Entes -->
+                <div class="mb-3">
+                    <button class="btn btn-outline-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEntes">
+                        Selecione os Entes
+                    </button>
+                    <div id="collapseEntes" class="collapse mt-2" style="max-height: 200px; overflow-y: auto;">
+                        {% for ente in entes %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="entes" value="{{ ente }}">
+                                <label class="form-check-label">{{ ente }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Botão para Anexos -->
+                <div class="mb-3">
+                    <button class="btn btn-outline-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnexos">
+                        Selecione os Anexos
+                    </button>
+                    <div id="collapseAnexos" class="collapse mt-2">
+                        {% for anexo in anexos %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="anexos" value="{{ anexo }}">
+                                <label class="form-check-label">{{ anexo }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Botão de Submissão -->
+                <button type="submit" class="btn btn-primary w-100">Extrair Dados</button>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
