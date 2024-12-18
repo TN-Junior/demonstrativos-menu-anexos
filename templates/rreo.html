@@ -25,7 +25,17 @@
         {% for anexo in anexos %}
             <label><input type="checkbox" name="anexos" value="{{ anexo }}"> {{ anexo }}</label><br>
         {% endfor %}
-        
+
+        <h3>Selecione os Municípios:</h3>
+        <div style="max-height: 300px; overflow-y: auto;">
+            {% for municipio in municipios %}
+                <label>
+                    <input type="checkbox" name="municipios" value="{{ municipio['cod. Munic 7D'] }}">
+                    {{ municipio['NOME DO MUNICÍPIO'] }}
+                </label><br>
+            {% endfor %}
+        </div>
+
         <button type="submit">Extrair Dados</button>
     </form>
 </body>
