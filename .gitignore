@@ -1,2 +1,5 @@
-dados_anexos_rgf.csv
+__init__.py
+__pycache__
+cd_municipio_ .xlsx
 venv
+.venv
